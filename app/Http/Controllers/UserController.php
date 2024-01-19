@@ -7,6 +7,8 @@ use Exception;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Helper\JWTToken;
+use Mail;
+use App\Mail\OTPMail;
 
 class UserController extends Controller
 {
@@ -34,8 +36,7 @@ class UserController extends Controller
         
     }
 
-    public function userLogin(Request $request)
-    {
+    public function userLogin(Request $request) {
         $user = User::where('email', $request->input('email'))->first();
 
         if ($user && Hash::check($request->input('password'), $user->password)) {
@@ -54,4 +55,31 @@ class UserController extends Controller
             ], 401);
         }
     }
+    
+    public function sendOTP(Request $request) {
+        $email = $request->input('email');
+        $otp = rand(1000, 9999);
+
+        $user = User::where('email', '=', $email)->first();
+
+        if ($user) {
+            $userName = $user->first_name; 
+
+            Mail::to($email)->send(new OTPMail($otp, $userName));
+
+            // Update OTP Code in User Table
+            $user->update(['otp' => $otp]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'A 4-digit OTP has been sent to your email.',
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid email. Please provide a registered email.',
+            ], 401);
+        }
+    }
+
 }
