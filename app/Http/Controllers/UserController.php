@@ -55,7 +55,7 @@ class UserController extends Controller
             ], 401);
         }
     }
-    
+
     public function sendOTP(Request $request) {
         $email = $request->input('email');
         $otp = rand(1000, 9999);
@@ -81,5 +81,59 @@ class UserController extends Controller
             ], 401);
         }
     }
+    
+    public function verifyOTP(Request $request) {
+        $email = $request->input('email');
+        $otp = $request->input('otp');
+    
+        $user = User::where('email', '=', $email)
+            ->where('otp', '=', $otp)
+            ->first();
+    
+        if ($user) {
+            // Update Database OTP
+            User::where('email', '=', $email)->update(['otp' => '0']);
+    
+            // Generate Password Reset Token
+            $jwtToken = new JWTToken();
+            $token = $jwtToken->createPasswordResetToken($request->input('email'));
+    
+            return response()->json([
+                'status' => 'success',
+                'message' => 'OTP verification successful.',
+                'token' => $token,
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid OTP. Please enter the correct OTP.',
+            ], 200);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        try {
+            $email = $request->header('email');
+            $password = $request->input('password');
+
+            // Hash the new password
+            $hashedPassword = Hash::make($password);
+
+            User::where('email', '=', $email)->update(['password' => $hashedPassword]);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Password reset successful.',
+            ], 200);
+
+        } catch (Exception $exception) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to reset password. Please try again.',
+            ], 200);
+        }
+    }
+
 
 }
