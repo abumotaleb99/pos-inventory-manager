@@ -9,11 +9,48 @@ use App\Models\User;
 use App\Helper\JWTToken;
 use Mail;
 use App\Mail\OTPMail;
+use Validator;
 
 class UserController extends Controller
 {
-    public function userRegistration(Request $request) {
+    function showUserRegistrationPage () {
+        return view('pages.auth.user-register');
+    }
+
+    function showUserLoginPage() {
+        return view('pages.auth.user-login');
+    }
+
+    function showForgetPasswordPage() {
+        return view('pages.auth.send-otp');
+    }
+
+    function showVerifyOTPPage() {
+        return view('pages.auth.verify-otp');
+    }
+
+    function showResetPasswordPage() {
+        return view('pages.auth.reset-password');
+    }
+
+    public function registerUser(Request $request) {
         try {
+            $validator = Validator::make($request->all(), [
+                'first_name' => 'required|string',
+                'last_name' => 'required|string',
+                'email' => 'required|email|unique:users,email|max:255',
+                'phone' => 'required|string|max:15',
+                'password' => 'required|string|min:6',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User registration failed due to validation errors.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+            
             User::create([
                 'first_name' => $request->input('first_name'),
                 'last_name' => $request->input('last_name'),
@@ -37,24 +74,45 @@ class UserController extends Controller
     }
 
     public function userLogin(Request $request) {
-        $user = User::where('email', $request->input('email'))->first();
-
-        if ($user && Hash::check($request->input('password'), $user->password)) {
-            $jwtToken = new JWTToken();
-            $token = $jwtToken->createToken($request->input('email'));
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'User login successful.',
-                'token' => $token,
-            ], 200);
-        } else {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'password' => 'required',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+    
+            $user = User::where('email', $request->input('email'))->first();
+    
+            if ($user && Hash::check($request->input('password'), $user->password)) {
+                $jwtToken = new JWTToken();
+                $token = $jwtToken->createToken($request->input('email'));
+    
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'User login successful',
+                    'token' => $token,
+                ], 200)->cookie('token', $token, time()+60*24*30);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid credentials',
+                ], 401);
+            }
+        } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid credentials.',
-            ], 401);
+                'message' => 'Login failed',
+            ], 500);
         }
     }
+    
 
     public function sendOTP(Request $request) {
         $email = $request->input('email');
