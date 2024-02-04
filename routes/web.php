@@ -25,11 +25,11 @@ Route::get('/user-register', [UserController::class, 'showUserRegistrationPage']
 Route::post('/user-register', [UserController::class, 'registerUser']);
 Route::get('/user-login', [UserController::class, 'showUserLoginPage']);
 Route::post('user-login', [UserController::class, 'userLogin']);
-Route::get('/forget-password', [UserController::class, 'showForgetPasswordPage']);
+Route::get('/forgot-password', [UserController::class, 'showForgotPasswordPage']);
 Route::post('/send-otp', [UserController::class, 'sendOTP']);
 Route::get('/verify-otp', [UserController::class, 'showVerifyOTPPage']);
 Route::post('/verify-otp', [UserController::class, 'verifyOTP']);
-Route::get('/reset-password', [UserController::class, 'showResetPasswordPage'])->middleware([TokenVerificationMiddleware::class]);
+Route::get('/reset-password', [UserController::class, 'showResetPasswordPage']);
 Route::post('/reset-password', [UserController::class, 'resetPassword'])->middleware([TokenVerificationMiddleware::class]);
 
 Route::get('/dashboard',[DashboardController::class,'DashboardPage']);

@@ -14,19 +14,22 @@ class TokenVerificationMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+
+    public function handle(Request $request, Closure $next)
     {
         $token = $request->header('token');
-
-        $jwtToken = new JWTToken();
-        $tokenResult = $jwtToken->verifyToken($token);
+        $key = env('JWT_KEY');
+        $tokenResult = JWTToken::verifyToken($token);
 
         if ($tokenResult === "unauthorized") {
-            return redirect('/user-login');
+            return response()->json([
+                'error' => 'Unauthorized'
+            ], 401);
         } else {
             $request->headers->set('email', $tokenResult);
             return $next($request);
         }
     }
+
     
 }

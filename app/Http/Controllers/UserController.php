@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Helper\JWTToken;
 use Mail;
+use Rule;
 use App\Mail\OTPMail;
 use Validator;
 
@@ -21,16 +22,16 @@ class UserController extends Controller
         return view('pages.auth.user-login');
     }
 
-    function showForgetPasswordPage() {
+    function showForgotPasswordPage() {
         return view('pages.auth.send-otp');
     }
 
     function showVerifyOTPPage() {
-        return view('pages.auth.verify-otp');
+        return view('pages.auth.verify-otp-page');
     }
 
     function showResetPasswordPage() {
-        return view('pages.auth.reset-password');
+        return view('pages.auth.reset-password-page');
     }
 
     public function registerUser(Request $request) {
@@ -112,15 +113,26 @@ class UserController extends Controller
             ], 500);
         }
     }
-    
 
-    public function sendOTP(Request $request) {
-        $email = $request->input('email');
-        $otp = rand(1000, 9999);
+    public function sendOTP(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|exists:users,email',
+            ]);
 
-        $user = User::where('email', '=', $email)->first();
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid email. Please provide a registered email.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
 
-        if ($user) {
+            $email = $request->input('email');
+            $otp = rand(1000, 9999);
+
+            $user = User::where('email', $email)->first();
             $userName = $user->first_name; 
 
             Mail::to($email)->send(new OTPMail($otp, $userName));
@@ -132,66 +144,90 @@ class UserController extends Controller
                 'status' => 'success',
                 'message' => 'A 4-digit OTP has been sent to your email.',
             ], 200);
-        } else {
+       
+        } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid email. Please provide a registered email.',
-            ], 401);
+                'message' => 'Failed to send OTP email. Please try again later.',
+            ], 500);
         }
     }
-    
-    public function verifyOTP(Request $request) {
+
+    public static function verifyOTP(Request $request)
+    {
         $email = $request->input('email');
         $otp = $request->input('otp');
-    
-        $user = User::where('email', '=', $email)
-            ->where('otp', '=', $otp)
+
+        $user = User::where('email', $email)
+            ->where('otp', $otp)
             ->first();
-    
-        if ($user) {
+
+        if (!empty($user)) {
             // Update Database OTP
-            User::where('email', '=', $email)->update(['otp' => '0']);
-    
+            $user->update(['otp' => '0']);
+
             // Generate Password Reset Token
             $jwtToken = new JWTToken();
-            $token = $jwtToken->createPasswordResetToken($request->input('email'));
-    
+            $token = $jwtToken->createPasswordResetToken($email);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'OTP verification successful.',
                 'token' => $token,
-            ], 200);
+            ], 200)->cookie('token', $token, 60*24*30);
         } else {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid OTP. Please enter the correct OTP.',
-            ], 200);
+            ], 401); // 422 for Unprocessable Entity
         }
     }
 
     public function resetPassword(Request $request)
     {
         try {
+            $validator = Validator::make($request->all(), [
+                'password' => 'required|min:8',
+            ]);
+
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422); // 422 Unprocessable Entity
+            }
+
             $email = $request->header('email');
             $password = $request->input('password');
 
             // Hash the new password
             $hashedPassword = Hash::make($password);
 
-            User::where('email', '=', $email)->update(['password' => $hashedPassword]);
-            
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Password reset successful.',
-            ], 200);
+            // Update user's password
+            $affectedRows = User::where('email', $email)->update(['password' => $hashedPassword]);
+
+            if ($affectedRows > 0) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Password reset successful.',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Password update failed. No rows were affected.',
+                ], 500); // 500 Internal Server Error
+            }
 
         } catch (Exception $exception) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to reset password. Please try again.',
-            ], 200);
+            ], 400); // 400 Bad Request
         }
     }
+
 
 
 }
