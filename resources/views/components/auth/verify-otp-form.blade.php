@@ -32,7 +32,7 @@
 
                 if (res.status === 200 && res.data['status'] === 'success') {
                     successToast(res.data['message']);
-                    // sessionStorage.clear();
+                    sessionStorage.clear();
                     setTimeout(() => {
                         window.location.href = '/reset-password';
                     }, 1000);

@@ -81,7 +81,7 @@ class JWTToken {
                 return 'unauthorized';
             }
         } catch (Exception $e) {
-            return 'unauthorized: ' . $e->getMessage();
+            return 'unauthorized';
         }
     }
     

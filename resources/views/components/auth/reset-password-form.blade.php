@@ -32,20 +32,17 @@ async function resetPass() {
             errorToast('Password and Confirm Password must be the same');
         } else {
             showLoader();
-            let res = await axios.post("{{ route('reset.password') }}", { password: password });
-            let res = await axios.post("{{ route('reset.password') }}", { password: password }, { headers: { email:  sessionStorage.getItem('email') } });
+            let res = await axios.post("reset-password", { password: password });
 
             hideLoader();
 
-            // Debugging statements
-            console.log('Response from /reset-password:', res);
 
             if (res.status === 200 && res.data['status'] === 'success') {
                 successToast(res.data['message']);
-                sessionStorage.clear();
-                // setTimeout(() => {
-                //     window.location.href = "user-login";
-                // }, 1000);
+                // sessionStorage.clear();
+                setTimeout(() => {
+                    window.location.href = "user-login";
+                }, 1000);
             } else {
                 errorToast(res.data['message']);
             }
