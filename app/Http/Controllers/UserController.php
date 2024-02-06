@@ -34,6 +34,11 @@ class UserController extends Controller
         return view('pages.auth.reset-password-page');
     }
 
+    function showUserProfilePage() {
+        return view('pages.dashboard.user-profile-page');
+    }
+
+
     public function registerUser(Request $request) {
         try {
             $validator = Validator::make($request->all(), [
@@ -231,6 +236,75 @@ class UserController extends Controller
     function logout(){
         return redirect('/user-login')->cookie('token','',-1);
     }
+
+    function getUserProfile(Request $request){
+        try {
+            $email = $request->header('email');
+            $user = User::where('email', '=', $email)->firstOrFail();
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User profile fetched successfully',
+                'data' => $user
+            ], 200);
+
+        } catch (Exception $exception) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch user profile. Please try again.',
+            ], 400); // 400 Bad Request
+        }
+    }
+
+    function updateUserProfile(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'phone' => 'required|string|max:20',
+                'password' => 'required|min:8',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422); // 422 Unprocessable Entity
+            }
+
+            $email = $request->header('email');
+            $firstName = $request->input('first_name');
+            $lastName = $request->input('last_name');
+            $phone = $request->input('phone');
+            $password = $request->input('password');
+
+            // Hash the new password
+            $hashedPassword = Hash::make($password);
+
+            // Update user's profile
+            User::where('email', '=', $email)->update([
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'phone' => $phone,
+                'password' => $hashedPassword
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Profile updated successfully',
+            ], 200);
+
+        } catch (Exception $exception) {
+            // Log the exception or handle it as needed
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update profile. Please try again.',
+            ], 500); // 500 Internal Server Error
+        }
+    }
+
 
 
 }

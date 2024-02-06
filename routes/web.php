@@ -33,4 +33,8 @@ Route::get('/reset-password', [UserController::class, 'showResetPasswordPage'])-
 Route::post('/reset-password', [UserController::class, 'resetPassword'])->middleware([TokenVerificationMiddleware::class]);
 Route::get('/logout',[UserController::class,'logout']);
 
+Route::get('/user-profile', [UserController::class, 'showUserProfilePage'])->middleware([TokenVerificationMiddleware::class]);
+Route::get('/profile', [UserController::class, 'getUserProfile'])->middleware([TokenVerificationMiddleware::class]);
+Route::post('/user-update', [UserController::class, 'updateUserProfile'])->middleware([TokenVerificationMiddleware::class]);
+
 Route::get('/dashboard',[DashboardController::class,'DashboardPage'])->middleware([TokenVerificationMiddleware::class]);
