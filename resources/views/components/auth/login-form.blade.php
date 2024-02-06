@@ -36,7 +36,7 @@
 
             if (res.status === 200 && res.data['status'] === 'success') {
                 successToast(res.data['message']);
-                // window.location.href = "/dashboard";
+                window.location.href = "/dashboard";
             }
         } catch (error) {
             // Handle Axios errors here

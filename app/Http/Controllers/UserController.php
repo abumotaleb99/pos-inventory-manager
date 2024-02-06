@@ -93,7 +93,7 @@ class UserController extends Controller
     
             if ($user && Hash::check($request->input('password'), $user->password)) {
                 $jwtToken = new JWTToken();
-                $token = $jwtToken->createToken($request->input('email'));
+                $token = $jwtToken->createToken($request->input('email'), $user->id);
     
                 return response()->json([
                     'status' => 'success',
@@ -228,6 +228,9 @@ class UserController extends Controller
         }
     }
 
+    function logout(){
+        return redirect('/user-login')->cookie('token','',-1);
+    }
 
 
 }

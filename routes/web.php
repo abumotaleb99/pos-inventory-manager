@@ -29,7 +29,8 @@ Route::get('/forgot-password', [UserController::class, 'showForgotPasswordPage']
 Route::post('/send-otp', [UserController::class, 'sendOTP']);
 Route::get('/verify-otp', [UserController::class, 'showVerifyOTPPage']);
 Route::post('/verify-otp', [UserController::class, 'verifyOTP']);
-Route::get('/reset-password', [UserController::class, 'showResetPasswordPage']);
+Route::get('/reset-password', [UserController::class, 'showResetPasswordPage'])->middleware([TokenVerificationMiddleware::class]);
 Route::post('/reset-password', [UserController::class, 'resetPassword'])->middleware([TokenVerificationMiddleware::class]);
+Route::get('/logout',[UserController::class,'logout']);
 
-Route::get('/dashboard',[DashboardController::class,'DashboardPage']);
+Route::get('/dashboard',[DashboardController::class,'DashboardPage'])->middleware([TokenVerificationMiddleware::class]);
