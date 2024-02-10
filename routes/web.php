@@ -4,6 +4,7 @@ use App\Http\Middleware\TokenVerificationMiddleware;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,3 +39,12 @@ Route::get('/profile', [UserController::class, 'getUserProfile'])->middleware([T
 Route::post('/user-update', [UserController::class, 'updateUserProfile'])->middleware([TokenVerificationMiddleware::class]);
 
 Route::get('/dashboard',[DashboardController::class,'DashboardPage'])->middleware([TokenVerificationMiddleware::class]);
+
+// Category API
+Route::get("/category-page",[CategoryController::class,'categoryPage'])->middleware([TokenVerificationMiddleware::class]);
+Route::post("/create-category",[CategoryController::class,'createCategory'])->middleware([TokenVerificationMiddleware::class]);
+Route::get("/category-list",[CategoryController::class,'categoryList'])->middleware([TokenVerificationMiddleware::class]);
+Route::post("/category-by-id",[CategoryController::class,'getCategoryById'])->middleware([TokenVerificationMiddleware::class]);
+Route::post("/update-category",[CategoryController::class,'updateCategory'])->middleware([TokenVerificationMiddleware::class]);
+Route::post("/delete-category",[CategoryController::class,'deleteCategory'])->middleware([TokenVerificationMiddleware::class]);
+

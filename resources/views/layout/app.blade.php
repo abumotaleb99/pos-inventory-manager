@@ -10,9 +10,7 @@
     <link href="{{asset('css/fontawesome.css')}}" rel="stylesheet" />
     <link href="{{asset('css/style.css')}}" rel="stylesheet" />
     <link href="{{asset('css/toastify.min.css')}}" rel="stylesheet" />
-    <script src="{{asset('js/toastify-js.js')}}"></script>
-    <script src="{{asset('js/axios.min.js')}}"></script>
-    <script src="{{asset('js/config.js')}}"></script>
+    <link href="{{asset('css/jquery.dataTables.min.css')}}" rel="stylesheet" />
 </head>
 <body>
     <div id="loader" class="LoadingOverlay d-none">
@@ -25,9 +23,11 @@
         @yield('content')
     </div>
 
+    <script src="{{asset('js/jquery-3.7.0.min.js')}}"></script>
     <script src="{{asset('js/bootstrap.bundle.js')}}"></script>
     <script src="{{asset('js/toastify-js.js')}}"></script>
     <script src="{{asset('js/axios.min.js')}}"></script>
     <script src="{{asset('js/config.js')}}"></script>
+    <script src="{{asset('js/jquery.dataTables.min.js')}}"></script>
 </body>
 </html>
